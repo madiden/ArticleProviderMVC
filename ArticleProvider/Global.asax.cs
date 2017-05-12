@@ -7,7 +7,7 @@ using System.Web.Optimization;
 using System.Web.Routing;
 
 
-//
+//jjj
 namespace ArticleProvider
 {
     public class MvcApplication : System.Web.HttpApplication
