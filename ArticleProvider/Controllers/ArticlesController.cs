@@ -21,10 +21,10 @@ namespace ArticleProvider.Controllers
         {
             get
             {
-                if(_userManager == null)
-                    _userManager =  HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
+                if (_userManager == null)
+                    _userManager = HttpContext.GetOwinContext().GetUserManager<ApplicationUserManager>();
                 return _userManager;
-            }            
+            }
         }
 
         private ApplicationUser GetUser()
@@ -33,14 +33,53 @@ namespace ArticleProvider.Controllers
         }
 
         // GET: Articles
-        [Authorize]
         public ActionResult Index()
         {
             ApplicationUser user = GetUser();
             var result = db.Articles;
-            ViewBag.IsEditor = user.IsEditor;
-            ViewBag.UserName = User.Identity.Name;
+            ViewBag.IsEditor = false;
+            if (user != null)
+            {
+                ViewBag.IsEditor = user.IsEditor;
+                ViewBag.UserName = User.Identity.Name;
+            }
             return View(result.ToList());
+        }
+
+        public ActionResult Comment()
+        {
+            return RedirectToAction("Index");
+        }
+
+        public ActionResult Like()
+        {
+            return RedirectToAction("Index");
+        }
+
+        [Authorize]
+        [HttpPost]
+        public ActionResult Comment([Bind(Include = "ArticleId, Comment")]ArticleComments artComment)
+        {
+            if (artComment.ArticleId <= 0)
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "You have passed an invalid article.");
+            if(db.Articles.Any((art => art.Id == artComment.ArticleId)))
+            {
+                if (string.IsNullOrWhiteSpace(artComment.Comment))
+                {
+                    TempData["EmptyComment"] = true;
+                }
+                else
+                {
+                    artComment.Date = DateTime.Now;
+                    artComment.UserId = User.Identity.Name;
+                    db.Comments.Add(artComment);
+                    db.SaveChanges();
+                }
+            }else
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound, "Article does not exist.");
+            }
+            return RedirectToAction("Details", new { id = artComment.ArticleId });
         }
 
         [Authorize]
@@ -49,8 +88,8 @@ namespace ArticleProvider.Controllers
         public ActionResult Like(int? articleId)
         {
             if (articleId == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "You have passed an invalid article.");           
-            if(!IsArticleLikedBefore(articleId.Value))
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "You have passed an invalid article.");
+            if (!IsArticleLikedBefore(articleId.Value))
             {
                 ArticleLike newLike = db.Likes.Create();
                 newLike.ArticleId = articleId.Value;
@@ -102,7 +141,7 @@ namespace ArticleProvider.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        public ActionResult Create([Bind(Include = "Id,Title,Content,AuthorId,CreationDate,LastUpdateDate")] Article article)
+        public ActionResult Create([Bind(Include = "Title,Content")] Article article)
         {
             if (ModelState.IsValid)
             {
@@ -129,6 +168,8 @@ namespace ArticleProvider.Controllers
             {
                 return HttpNotFound();
             }
+            if (User.Identity.Name != article.AuthorId)
+                return new HttpStatusCodeResult(HttpStatusCode.Unauthorized, "You are not the author of the article.");
             return View(article);
         }
 
@@ -144,7 +185,7 @@ namespace ArticleProvider.Controllers
                 // As we are only getting Id, Title and content fields, We need to update only them.
                 // because CreationDate and AuthorId is only set when creation is made.
                 var entry = db.Entry(article);
-                var dbArticle= db.Articles.Attach(article);
+                var dbArticle = db.Articles.Attach(article);
                 dbArticle.Title = article.Title;
                 dbArticle.Content = article.Content;
                 dbArticle.LastUpdateDate = DateTime.Now;

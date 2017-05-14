@@ -56,12 +56,46 @@
         <input class="btn-info" id="likebutton" type="submit" value="Like" />
     }
 </div>
+@{ 
+    var emptyComment = TempData["EmptyComment"];
+    if (emptyComment != null)
+    {
+        <span id="emptyComment" style="display:none"></span>
+    }
 
+}
 
     @if (ViewBag.LikedBefore != null && ViewBag.LikedBefore)
     {
         <span style="display:none" id="liked"></span>
     }
+
+<div class="container">
+    <div class="row">
+        <h3>Comments</h3>
+    </div>
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th class="col-md-1">User</th>
+            <th class="col-md-1">Date</th>
+            <th class="col-md-10">Comment</th>
+        </tr>
+        @foreach (var item in Model.Comments)
+        {
+            <tr>
+                <td>
+                    @item.UserId
+                </td>
+                <td>
+                    @item.Date
+                </td>
+                <td>
+                    @item.Comment
+                </td>
+            </tr>
+        }
+    </table>
+</div>
 <!-- Modal -->
 <div class="modal fade" id="myModal" role="dialog">
     <div class="modal-dialog">
@@ -69,10 +103,10 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
-                <h4 class="modal-title">Already Liked!</h4>
+                <h4 class="modal-title">Empty Comment</h4>
             </div>
             <div class="modal-body">
-                <p>You have already liked this article. </p>
+                <p>Comment can not be empty.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -81,9 +115,19 @@
     </div>
 </div>
 <p>
+    <div class="row">
+        <label class="col-md-1 text-primary text-left">Comment</label>
+        @using (Html.BeginForm("Comment", "Articles", FormMethod.Post))
+        {
+            <textarea name="Comment" class="col-md-11" rows="10"></textarea>
+            <input type="hidden" name="ArticleId" value="@Model.Id">            
+            <br/>
+            <button type="submit" class="btn btn-info col-md-2 col-lg-offset-10">Comment</button>
+        }
+    </div>
     @if (ViewBag.UserName == Model.AuthorId)
     {
-        @Html.ActionLink("Edit", "Edit", new { id = Model.Id })@: |
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id })
     }
     @Html.ActionLink("Back to List", "Index")
 </p>
@@ -94,7 +138,11 @@
         $(function () {
             if ($('#liked').length > 0) {
                 //$('#myModal').modal('show');
+                $('#likebutton').val("Already liked");
                 $('#likebutton').removeClass('btn btn-info').addClass('btn btn-success').prop('disabled', true);
+            }
+            if ($('#emptyComment').length > 0) {
+                $('#myModal').modal('show');
             }
         }
             );

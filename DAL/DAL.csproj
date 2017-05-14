@@ -87,6 +87,14 @@
     <Compile Include="Migrations\201705131756442_datetime.Designer.cs">
       <DependentUpon>201705131756442_datetime.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201705141834160_CommentUserIdAdded.cs" />
+    <Compile Include="Migrations\201705141834160_CommentUserIdAdded.Designer.cs">
+      <DependentUpon>201705141834160_CommentUserIdAdded.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201705141929151_requiredCommentr.cs" />
+    <Compile Include="Migrations\201705141929151_requiredCommentr.Designer.cs">
+      <DependentUpon>201705141929151_requiredCommentr.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Migrations\UserContextConfiguration.cs" />
     <Compile Include="Model\ApplicationUser.cs" />
@@ -115,6 +123,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201705131756442_datetime.resx">
       <DependentUpon>201705131756442_datetime.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201705141834160_CommentUserIdAdded.resx">
+      <DependentUpon>201705141834160_CommentUserIdAdded.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201705141929151_requiredCommentr.resx">
+      <DependentUpon>201705141929151_requiredCommentr.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

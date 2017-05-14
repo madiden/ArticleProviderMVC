@@ -5,7 +5,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Index</h2>
+<h2>Articles</h2>
 
 <p>
     @if (ViewBag.IsEditor)
@@ -15,19 +15,16 @@
 </p>
 <table class="table">
     <tr>
-        <th>
+        <th class="col-md-4">
             @Html.DisplayNameFor(model => model.Title)
         </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Content)
-        </th>
-        <th>
+        <th class="col-md-2">
             @Html.DisplayNameFor(model => model.AuthorId)
         </th>
-        <th>
+        <th class="col-md-2">
             @Html.DisplayNameFor(model => model.CreationDate)
         </th>
-        <th>
+        <th class="col-md-2">
             @Html.DisplayNameFor(model => model.LastUpdateDate)
         </th>
         <th></th>
@@ -37,10 +34,7 @@
     {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Content)
+                @Html.ActionLink(item.Title, "Details", new { id = item.Id })
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.AuthorId)
@@ -52,19 +46,16 @@
                 @Html.DisplayFor(modelItem => item.LastUpdateDate)
             </td>
             <td>
-                @{ bool canEdit = ViewBag.UserName == item.AuthorId;
-                    if (canEdit)
-                    {
-                        @Html.ActionLink("Edit", "Edit", new { id = item.Id }) @:|
-                    }
-                    @Html.ActionLink("Details", "Details", new { id = item.Id })
-                    if (canEdit)
-                    {                         
-                        @:|@Html.ActionLink("Delete", "Delete", new { id = item.Id })
-                    }
+                @{
+                    bool canEdit = ViewBag.UserName != null && ViewBag.UserName == item.AuthorId;
+                }
+                @if (canEdit)
+                {
+                    @Html.ActionLink("Edit", "Edit", new { id = item.Id }) @:|
+                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
                 }
             </td>
         </tr>
-                    }
+                }
 
 </table>
