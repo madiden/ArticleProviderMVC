@@ -46,6 +46,9 @@ namespace ArticleProvider.Models
         [Display(Name = "Current password")]
         public string OldPassword { get; set; }
 
+        [Display(Name ="Editor")]
+        public bool IsEditor { get; set; }
+
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]

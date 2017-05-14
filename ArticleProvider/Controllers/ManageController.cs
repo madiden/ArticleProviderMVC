@@ -217,7 +217,9 @@ namespace ArticleProvider.Controllers
         // GET: /Manage/ChangePassword
         public ActionResult ChangePassword()
         {
-            return View();
+            var user = UserManager.FindById(User.Identity.GetUserId());
+            ChangePasswordViewModel cvm = new ChangePasswordViewModel() { IsEditor = user.IsEditor };
+            return View(cvm);
         }
 
         //
@@ -230,10 +232,15 @@ namespace ArticleProvider.Controllers
             {
                 return View(model);
             }
+
+            var user =  UserManager.FindById(User.Identity.GetUserId());
+            user.IsEditor = model.IsEditor;
+            await UserManager.UpdateAsync(user);
+            
             var result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
             if (result.Succeeded)
             {
-                var user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
+                user = await UserManager.FindByIdAsync(User.Identity.GetUserId());
                 if (user != null)
                 {
                     await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);

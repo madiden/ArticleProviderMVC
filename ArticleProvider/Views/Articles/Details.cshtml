@@ -1,0 +1,102 @@
+﻿@model DAL.Model.Article
+
+@{
+    ViewBag.Title = "Article Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Article</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Content)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Content)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.AuthorId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.AuthorId)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.CreationDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.CreationDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.LastUpdateDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.LastUpdateDate)
+        </dd>
+    </dl>
+    @using (Html.BeginForm("Like", "Articles", new { articleId = Model.Id }, FormMethod.Post))
+    {
+        <input class="btn-info" id="likebutton" type="submit" value="Like" />
+    }
+</div>
+
+
+    @if (ViewBag.LikedBefore != null && ViewBag.LikedBefore)
+    {
+        <span style="display:none" id="liked"></span>
+    }
+<!-- Modal -->
+<div class="modal fade" id="myModal" role="dialog">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Already Liked!</h4>
+            </div>
+            <div class="modal-body">
+                <p>You have already liked this article. </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<p>
+    @if (ViewBag.UserName == Model.AuthorId)
+    {
+        @Html.ActionLink("Edit", "Edit", new { id = Model.Id })@: |
+    }
+    @Html.ActionLink("Back to List", "Index")
+</p>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(function () {
+            if ($('#liked').length > 0) {
+                //$('#myModal').modal('show');
+                $('#likebutton').removeClass('btn btn-info').addClass('btn btn-success').prop('disabled', true);
+            }
+        }
+            );
+    </script>
+}
