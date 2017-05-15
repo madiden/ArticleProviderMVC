@@ -9,6 +9,8 @@ using System.Web.Mvc;
 using DAL.Model;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
+using System.Web.Configuration;
+using System.Diagnostics;
 
 namespace ArticleProvider.Controllers
 {
@@ -36,7 +38,13 @@ namespace ArticleProvider.Controllers
         public ActionResult Index()
         {
             ApplicationUser user = GetUser();
-            var result = db.Articles;
+            var result = db.Articles.ToList();
+            foreach (var article in result)
+            {
+                article.LikeCount = article.Likes.Count();
+            }
+            ViewBag.MaximumLikes = result.Max(a => a.LikeCount);
+            ViewBag.MinimumLikes = result.Min(a => a.LikeCount);
             ViewBag.IsEditor = false;
             if (user != null)
             {
@@ -48,11 +56,13 @@ namespace ArticleProvider.Controllers
 
         public ActionResult Comment()
         {
+            // Return to Index page after a login on licomment operation.
             return RedirectToAction("Index");
         }
 
         public ActionResult Like()
         {
+            // Return to Index page after a login on like operation.
             return RedirectToAction("Index");
         }
 
@@ -82,6 +92,7 @@ namespace ArticleProvider.Controllers
             return RedirectToAction("Details", new { id = artComment.ArticleId });
         }
 
+        [OutputCache(NoStore =true, Duration =0)]
         [Authorize]
         [HttpPost]
         //[Route("articles/like/{aritcleId}")]
@@ -89,14 +100,26 @@ namespace ArticleProvider.Controllers
         {
             if (articleId == null)
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "You have passed an invalid article.");
-            if (!IsArticleLikedBefore(articleId.Value))
+            bool likedBefore = IsArticleLikedBefore(articleId.Value);
+            if (!likedBefore)
             {
-                ArticleLike newLike = db.Likes.Create();
-                newLike.ArticleId = articleId.Value;
-                newLike.UserId = User.Identity.GetUserId();
-                newLike.Date = DateTime.Now;
-                db.Likes.Add(newLike);
-                db.SaveChanges();
+                bool likeNumberExceeded = IsArticleLikeCountExceededForUser(articleId.Value);
+                if (!likeNumberExceeded)
+                {
+                    ArticleLike newLike = db.Likes.Create();
+                    newLike.ArticleId = articleId.Value;
+                    newLike.UserId = User.Identity.GetUserId();
+                    newLike.Date = DateTime.Now;
+                    db.Likes.Add(newLike);
+                    db.SaveChanges();
+                }
+                else
+                    TempData["LikeExceeded"] = true;
+            }
+            else
+            {
+                // Set the tempdata and check in re-directed Details action to prevent redundant DB reads for previous likes.
+                TempData["LikedBefore"] = true;
             }
             return RedirectToAction("Details", new { id = articleId });
         }
@@ -105,11 +128,22 @@ namespace ArticleProvider.Controllers
         {
             var userId = User.Identity.GetUserId();
             var query = db.Likes.Where((like) => like.ArticleId == id && like.UserId == userId);
-            if (query.Count() > 0)
-                return true;
-            return false;
+            return query.Count() > 0;
         }
 
+        private bool IsArticleLikeCountExceededForUser(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            DateTime now = DateTime.Now.Date;
+            DateTime tomorrow = now.AddDays(1).AddMilliseconds(-1);
+            var query = db.Likes.Where((like) =>
+                       like.UserId == userId &&
+                       like.Date > now &&
+                       like.Date < tomorrow);
+            return query.Count() >= Int32.Parse(WebConfigurationManager.AppSettings["MaximumLikesInADayPerUser"]);
+        }
+
+        [OutputCache(NoStore =true, Duration =0)]
         // GET: Articles/Details/5
         public ActionResult Details(int? id)
         {
@@ -123,8 +157,9 @@ namespace ArticleProvider.Controllers
                 return HttpNotFound();
             }
             ViewBag.UserName = User.Identity.Name;
-            if (IsArticleLikedBefore(id.Value))
-                ViewBag.LikedBefore = true;
+            // Check for previous likes. If coming from Like Redirection do not check again
+            if (TempData["LikedBefore"] == null && IsArticleLikedBefore(id.Value))
+                TempData["LikedBefore"] = true;
             return View(article);
         }
 

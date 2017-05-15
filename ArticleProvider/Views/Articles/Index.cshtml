@@ -4,7 +4,20 @@
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<style>
+    .progress {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
 
+    table .progress {
+        margin-bottom: 0;
+    }
+
+    .progress-bar {
+        border-radius: 4px !important;
+    }
+</style>
 <h2>Articles</h2>
 
 <p>
@@ -15,7 +28,7 @@
 </p>
 <table class="table">
     <tr>
-        <th class="col-md-4">
+        <th class="col-md-3">
             @Html.DisplayNameFor(model => model.Title)
         </th>
         <th class="col-md-2">
@@ -27,7 +40,7 @@
         <th class="col-md-2">
             @Html.DisplayNameFor(model => model.LastUpdateDate)
         </th>
-        <th></th>
+        <th class="col-xs-3">Likes</th>
     </tr>
 
     @foreach (var item in Model)
@@ -47,6 +60,30 @@
             </td>
             <td>
                 @{
+                    int percent = (int)(item.LikeCount * 100 / ViewBag.MaximumLikes);
+                }
+                <table>
+                    <tr>
+                        <td class="col-xs-11">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width:@percent%">
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge">@item.LikeCount</span>
+                        </td>
+                    </tr>
+                </table>
+                @*<div class="progress-bar progress-bar-warning" role="progressbar" style="width:60%">
+                        Warning
+                    </div>
+                    <div class="progress-bar progress-bar-danger" role="progressbar" style="width:20%">
+                        Danger
+                    </div>*@
+            </td>
+            <td>
+                @{
                     bool canEdit = ViewBag.UserName != null && ViewBag.UserName == item.AuthorId;
                 }
                 @if (canEdit)
@@ -56,6 +93,6 @@
                 }
             </td>
         </tr>
-                }
+                    }
 
 </table>

@@ -63,11 +63,16 @@
         <span id="emptyComment" style="display:none"></span>
     }
 
+    if (TempData["LikeExceeded"] != null)
+    {
+        <span id="likeExceeded" style="display:none"></span>
+    }
+
 }
 
-    @if (ViewBag.LikedBefore != null && ViewBag.LikedBefore)
+    @if (TempData["LikedBefore"] != null)
     {
-        <span style="display:none" id="liked"></span>
+        <span style="display:none" id="likedBefore"></span>
     }
 
 <div class="container">
@@ -136,13 +141,19 @@
     @Scripts.Render("~/bundles/jqueryval")
     <script>
         $(function () {
-            if ($('#liked').length > 0) {
+            if ($('#likedBefore').length > 0) {
                 //$('#myModal').modal('show');
                 $('#likebutton').val("Already liked");
                 $('#likebutton').removeClass('btn btn-info').addClass('btn btn-success').prop('disabled', true);
             }
             if ($('#emptyComment').length > 0) {
                 $('#myModal').modal('show');
+            }
+            if ($('#likeExceeded').length > 0) {
+                var modal = $('#myModal');
+                modal.find('.modal-title').html("Like Credit exceeded.");
+                modal.find('.modal-body > p').html("You have exceeded total number of likes for today.");
+                modal.modal('show');
             }
         }
             );

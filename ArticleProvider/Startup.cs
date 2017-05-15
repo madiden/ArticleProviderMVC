@@ -1,5 +1,7 @@
-﻿using Microsoft.Owin;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Owin;
 using Owin;
+using System;
 
 [assembly: OwinStartupAttribute(typeof(ArticleProvider.Startup))]
 namespace ArticleProvider
@@ -9,6 +11,10 @@ namespace ArticleProvider
         public void Configuration(IAppBuilder app)
         {
             ConfigureAuth(app);
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
         }
     }
 }

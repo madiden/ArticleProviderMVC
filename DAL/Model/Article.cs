@@ -26,5 +26,8 @@ namespace DAL.Model
         public DateTime? LastUpdateDate { get; set; }
         public virtual ICollection<ArticleComments> Comments { get; set; }
         public virtual ICollection<ArticleLike> Likes { get; set; }
+
+        [NotMapped]
+        public int LikeCount { get; set; }
     }
 }
