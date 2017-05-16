@@ -11,12 +11,19 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.AspNet.Identity;
 using System.Web.Configuration;
 using System.Diagnostics;
+using ArticleProvider.Services;
 
 namespace ArticleProvider.Controllers
 {
     public class ArticlesController : Controller
     {
-        private ArticleContext db = new ArticleContext();
+        private ArticleContext db;
+        private IConfigurationProvider _configProvider;
+        public ArticlesController(IConfigurationProvider confProvider, ArticleContext context)
+        {
+            _configProvider = confProvider;
+            db = context;
+        }
 
         private ApplicationUserManager _userManager;
         public ApplicationUserManager UserManager
@@ -28,6 +35,7 @@ namespace ArticleProvider.Controllers
                 return _userManager;
             }
         }
+
 
         private ApplicationUser GetUser()
         {
@@ -103,7 +111,7 @@ namespace ArticleProvider.Controllers
             bool likedBefore = IsArticleLikedBefore(articleId.Value);
             if (!likedBefore)
             {
-                bool likeNumberExceeded = IsArticleLikeCountExceededForUser(articleId.Value);
+                bool likeNumberExceeded = IsArticleLikeCountExceededForUser();
                 if (!likeNumberExceeded)
                 {
                     ArticleLike newLike = db.Likes.Create();
@@ -126,21 +134,21 @@ namespace ArticleProvider.Controllers
 
         private bool IsArticleLikedBefore(int id)
         {
-            var userId = User.Identity.GetUserId();
+            var userId = User.Identity.Name;
             var query = db.Likes.Where((like) => like.ArticleId == id && like.UserId == userId);
             return query.Count() > 0;
         }
 
-        private bool IsArticleLikeCountExceededForUser(int id)
+        private bool IsArticleLikeCountExceededForUser()
         {
-            var userId = User.Identity.GetUserId();
+            var userId = User.Identity.Name;
             DateTime now = DateTime.Now.Date;
             DateTime tomorrow = now.AddDays(1).AddMilliseconds(-1);
             var query = db.Likes.Where((like) =>
                        like.UserId == userId &&
                        like.Date > now &&
                        like.Date < tomorrow);
-            return query.Count() >= Int32.Parse(WebConfigurationManager.AppSettings["MaximumLikesInADayPerUser"]);
+            return query.Count() >= _configProvider.GetMaximumLikesPerDay();
         }
 
         [OutputCache(NoStore =true, Duration =0)]

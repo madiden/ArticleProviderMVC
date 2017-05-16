@@ -10,6 +10,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using ArticleProvider.Models;
 using DAL.Model;
+using ArticleProvider.Services;
 
 namespace ArticleProvider.Controllers
 {
@@ -17,17 +18,11 @@ namespace ArticleProvider.Controllers
     public class AccountController : Controller
     {
         private ApplicationSignInManager _signInManager;
-        private ApplicationUserManager _userManager;
+        private ApplicationUserManager _userManager;        
 
         public AccountController()
         {
-        }
-
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
-        {
-            UserManager = userManager;
-            SignInManager = signInManager;
-        }
+        }        
 
         public ApplicationSignInManager SignInManager
         {
