@@ -22,12 +22,14 @@ namespace DAL.Model
         [Display(AutoGenerateField =false)]
         public DateTime CreationDate { get; set; }
         [Display(AutoGenerateField = false)]
-        [Column(TypeName ="datetime2")]
         public DateTime? LastUpdateDate { get; set; }
         public virtual ICollection<ArticleComments> Comments { get; set; }
         public virtual ICollection<ArticleLike> Likes { get; set; }
 
         [NotMapped]
         public int LikeCount { get; set; }
+
+        [NotMapped]
+        public int Percentage { get; set; }
     }
 }

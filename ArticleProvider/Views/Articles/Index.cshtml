@@ -59,14 +59,11 @@
                 @Html.DisplayFor(modelItem => item.LastUpdateDate)
             </td>
             <td>
-                @{
-                    int percent = (int)(item.LikeCount * 100 / ViewBag.MaximumLikes);
-                }
                 <table>
                     <tr>
                         <td class="col-xs-11">
                             <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width:@percent%">
+                                <div class="progress-bar" role="progressbar" style="width:@item.Percentage%">
                                 </div>
                             </div>
                         </td>

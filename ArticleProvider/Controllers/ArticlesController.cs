@@ -51,8 +51,13 @@ namespace ArticleProvider.Controllers
             {
                 article.LikeCount = article.Likes.Count();
             }
-            ViewBag.MaximumLikes = result.Max(a => a.LikeCount);
+            int max = result.Max(a => a.LikeCount);
             ViewBag.MinimumLikes = result.Min(a => a.LikeCount);
+            foreach (var article in result)
+            {
+                if (max > 0)
+                    article.Percentage = (int)(article.LikeCount * 100 / max);
+            }
             ViewBag.IsEditor = false;
             if (user != null)
             {
@@ -101,37 +106,48 @@ namespace ArticleProvider.Controllers
         }
 
         [OutputCache(NoStore =true, Duration =0)]
-        [Authorize]
         [HttpPost]
+
         //[Route("articles/like/{aritcleId}")]
         public ActionResult Like(int? articleId)
         {
-            if (articleId == null)
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest, "You have passed an invalid article.");
-            bool likedBefore = IsArticleLikedBefore(articleId.Value);
-            if (!likedBefore)
+            if (!User.Identity.IsAuthenticated)
             {
-                bool likeNumberExceeded = IsArticleLikeCountExceededForUser();
-                if (!likeNumberExceeded)
-                {
-                    ArticleLike newLike = db.Likes.Create();
-                    newLike.ArticleId = articleId.Value;
-                    newLike.UserId = User.Identity.GetUserId();
-                    newLike.Date = DateTime.Now;
-                    db.Likes.Add(newLike);
-                    db.SaveChanges();
-                }
-                else
-                    TempData["LikeExceeded"] = true;
+                Response.StatusCode = 403;
+                return Json(new {Message = "You must log in to be able to like." });
             }
+            bool success = false;
+            string message = string.Empty;
+            if (articleId == null)
+                message = "You have passed an invalid article.";
             else
             {
-                // Set the tempdata and check in re-directed Details action to prevent redundant DB reads for previous likes.
-                TempData["LikedBefore"] = true;
-            }
-            return RedirectToAction("Details", new { id = articleId });
+                bool likedBefore = IsArticleLikedBefore(articleId.Value);
+                if (!likedBefore)
+                {
+                    bool likeNumberExceeded = IsArticleLikeCountExceededForUser();
+                    if (!likeNumberExceeded)
+                    {
+                        ArticleLike newLike = db.Likes.Create();
+                        newLike.ArticleId = articleId.Value;
+                        newLike.UserId = User.Identity.Name;
+                        newLike.Date = DateTime.Now;
+                        db.Likes.Add(newLike);
+                        db.SaveChanges();
+                        success = true;
+                    }
+                    else
+                        message = "You have exceeded total number of likesfor today";
+                }
+                else
+                {
+                    message = "You have liked this article before";
+                }
+            }         
+            
+            return Json(new { Success = success, Message = message }, JsonRequestBehavior.AllowGet);
         }
-
+        
         private bool IsArticleLikedBefore(int id)
         {
             var userId = User.Identity.Name;
@@ -225,15 +241,18 @@ namespace ArticleProvider.Controllers
         {
             if (ModelState.IsValid)
             {
-                // As we are only getting Id, Title and content fields, We need to update only them.
-                // because CreationDate and AuthorId is only set when creation is made.
-                var entry = db.Entry(article);
-                var dbArticle = db.Articles.Attach(article);
-                dbArticle.Title = article.Title;
-                dbArticle.Content = article.Content;
-                dbArticle.LastUpdateDate = DateTime.Now;
-                db.SaveChanges();
-                return RedirectToAction("Index");
+                var original = db.Articles.Find(article.Id);
+                if(original != null)
+                {
+                    if (original.AuthorId == User.Identity.Name)
+                    {
+                        original.Title = article.Title;
+                        original.Content = article.Content;
+                        original.LastUpdateDate = DateTime.Now;
+                        db.SaveChanges();
+                        return RedirectToAction("Index");
+                    }
+                }
             }
             return View(article);
         }

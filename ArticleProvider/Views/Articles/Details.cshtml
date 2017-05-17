@@ -51,29 +51,19 @@
             @Html.DisplayFor(model => model.LastUpdateDate)
         </dd>
     </dl>
-    @using (Html.BeginForm("Like", "Articles", new { articleId = Model.Id }, FormMethod.Post))
-    {
-        <input class="btn-info" id="likebutton" type="submit" value="Like" />
+    @{
+        string cls = "btn btn-info";
+        string value = "Like";
+        string disabled = "";
+        if (TempData["LikedBefore"] != null)
+        {
+            cls = "btn btn-success";
+            value = "Already liked";
+            disabled = "disabled";
+        }
     }
+    <input class="@cls" id="likebutton" type="submit" value="@value" @disabled />
 </div>
-@{ 
-    var emptyComment = TempData["EmptyComment"];
-    if (emptyComment != null)
-    {
-        <span id="emptyComment" style="display:none"></span>
-    }
-
-    if (TempData["LikeExceeded"] != null)
-    {
-        <span id="likeExceeded" style="display:none"></span>
-    }
-
-}
-
-    @if (TempData["LikedBefore"] != null)
-    {
-        <span style="display:none" id="likedBefore"></span>
-    }
 
 <div class="container">
     <div class="row">
@@ -122,13 +112,14 @@
 <p>
     <div class="row">
         <label class="col-md-1 text-primary text-left">Comment</label>
-        @using (Html.BeginForm("Comment", "Articles", FormMethod.Post))
+        @using (Html.BeginForm("Comment", "Articles", FormMethod.Post, new { Id = "commentForm" }))
         {
-            <textarea name="Comment" class="col-md-11" rows="10"></textarea>
-            <input type="hidden" name="ArticleId" value="@Model.Id">            
-            <br/>
-            <button type="submit" class="btn btn-info col-md-2 col-lg-offset-10">Comment</button>
+            <textarea name="Comment" id="commentText" class="col-md-11" rows="10"></textarea>
+            <input type="hidden" name="ArticleId" value="@Model.Id">
+            <br />            
+            <input style="display:none" type="submit" class="btn btn-info col-md-2 col-lg-offset-10"></input>
         }
+        <button id="commitButton" class="btn btn-info col-md-2 col-lg-offset-10">Comment</button>
     </div>
     @if (ViewBag.UserName == Model.AuthorId)
     {
@@ -141,21 +132,47 @@
     @Scripts.Render("~/bundles/jqueryval")
     <script>
         $(function () {
-            if ($('#likedBefore').length > 0) {
-                //$('#myModal').modal('show');
-                $('#likebutton').val("Already liked");
-                $('#likebutton').removeClass('btn btn-info').addClass('btn btn-success').prop('disabled', true);
-            }
-            if ($('#emptyComment').length > 0) {
-                $('#myModal').modal('show');
-            }
-            if ($('#likeExceeded').length > 0) {
-                var modal = $('#myModal');
-                modal.find('.modal-title').html("Like Credit exceeded.");
-                modal.find('.modal-body > p').html("You have exceeded total number of likes for today.");
-                modal.modal('show');
-            }
+            $('#likebutton').click(function () {
+                var button = $(event.target);
+                button.prop('disabled', true);
+                var jqxhr = $.post('/Articles/Like',{articleId:@Model.Id}, function(data){
+                    var success = false;
+                    if(data){
+                        if(data.Success){
+                            success = true;
+                            button.removeClass('btn btn-info').addClass('btn btn-success');
+                            button.val("Already liked");
+                        }else{                            
+                            showModal("Like Result", data.Message);
+                        }
+                    }
+                    if(!success)
+                        button.prop('disabled', false);
+                }).error(
+                function(){
+                    var message = "Internal error.";
+                    if(jqxhr.status == 403){
+                        message =  "You are not authorized. Please log in.";
+                    }
+                    showModal("Error", message);
+                })
+                .complete(function(){console.log(jqxhr.status)});
+            });
+            $('#commitButton').click(function(){
+                var comment = $('#commentText').val();
+                if(comment.trim() === ""){
+                    showModal("Validation Error", "You can not send an empty comment");
+                }else{
+                    $('#commentForm').submit();
+                }
+            });           
+        });
+
+        function showModal(title, message){
+            var modal = $('#myModal');
+            modal.find('.modal-title').html(title);
+            modal.find('.modal-body > p').html(message);
+            modal.modal('show');
         }
-            );
     </script>
 }
